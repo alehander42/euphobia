@@ -56,12 +56,13 @@ function parse_iso8601(time) {
     //just fuck it
 }
 
-FIRST = 1433953821.7
+FIRST = new Date(2015, 5, 11, 15, 45, 0).getTime() / 1000;
+timezone_diff = new Date().getTimezoneOffset() + 120;
+FIRST -= 60 * timezone_diff;
 
 function onYouTubeIframeAPIReady() {
-    console.log(songs);
     load_playlist(function(start_time) {
-        console.log(songs, start_time);
+        console.log('songs:', songs, start_time);
 
         transmitter = new YT.Player('transmitter', {
         height: '360',
@@ -107,6 +108,7 @@ function moveVideo() {
 
 function playlist_now(z) {
     var now = new Date().getTime() / 1000;
+    console.log(now, FIRST)
     if (FIRST > now) { setTimeout(function() { playlist_now(z); }, FIRST - now);}
     var time = FIRST;
 

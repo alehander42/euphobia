@@ -8,7 +8,7 @@ WHITELIST = ['172.28.168.216'] # cuz no time for auth scheme
 
 @app.route('/')
 def hello_world():
-    return render_template('euphobia.html')
+    return render_template('panelka.html')
 
 @app.route('/zdmin/')
 def zdmin():

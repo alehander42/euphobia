@@ -1,4 +1,4 @@
-web: gunicorn euphobia:app -b 0.0.0.0:$PORT --log-file=-
+web: gunicorn panelka:app -b 0.0.0.0:$PORT --log-file=-
 
 
 
