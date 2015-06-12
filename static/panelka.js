@@ -13,7 +13,7 @@ var songs = []; //'A3enAoLk3U8', 'dztURk0_DOg'];
 var i = 0;
 var transmitter;
 
-var API_ROOT = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=' + playlist_id + '&key='
+var API_ROOT = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=42&playlistId=' + playlist_id + '&key='
 var duration_url = function(ids) {
     var id_joined = ids.join('%2C');
     return 'https://www.googleapis.com/youtube/v3/videos?id=' + id_joined + '&part=contentDetails&key=' + API_KEY;
@@ -29,6 +29,7 @@ function load_playlist(z) {
         var ids = [];
         songs = [];
         for (var i = 0; i < data.items.length; i++) {
+            console.log(data.items.length);
             songs.push({id: data.items[i].snippet.resourceId.videoId,
                         title: data.items[i].snippet.title});
             ids.push(data.items[i].snippet.resourceId.videoId);
@@ -76,6 +77,7 @@ function parse_iso8601(time) {
         sec += time[i];
         i++;
     }
+    if(sec == '') { sec = '0' }
     return 60 * parseInt(min) + parseInt(sec);
     //just fuck it
 }
@@ -84,6 +86,8 @@ function onYouTubeIframeAPIReady() {
     load_playlist(function() { playlist_now(function(start_time) {
         console.log('songs:', songs, start_time);
 
+
+        setTimeout(reload_playlist, 1000 * (songs[i].begin_at + songs[i].duration - start_time - 22));
         setTimeout(reload_playlist, 1000 * (songs[i].begin_at + songs[i].duration - start_time - 12));
         transmitter = new YT.Player('transmitter', {
         height: '360',
@@ -115,6 +119,7 @@ function onPlayerStateChange(event) {
         if(i == songs.length) {
             i = 1;
         }
+        setTimeout(reload_playlist, 1000 * (songs[i].begin_at + songs[i].duration - 22));
         setTimeout(reload_playlist, 1000 * (songs[i].begin_at + songs[i].duration - 12));
         transmitter.loadVideoById(songs[i].id);
     }
