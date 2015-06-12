@@ -19,9 +19,15 @@ var duration_url = function(ids) {
     return 'https://www.googleapis.com/youtube/v3/videos?id=' + id_joined + '&part=contentDetails&key=' + API_KEY;
 }
 
+
+FIRST = new Date(2015, 5, 12, 23, 28, 0).getTime() / 1000;
+timezone_diff = new Date().getTimezoneOffset() + 120;
+FIRST -= 60 * timezone_diff;
+
 function load_playlist(z) {
     $.get(API_ROOT + API_KEY, {}, function (data) {
         var ids = [];
+        songs = [];
         for (var i = 0; i < data.items.length; i++) {
             songs.push({id: data.items[i].snippet.resourceId.videoId,
                         title: data.items[i].snippet.title});
@@ -29,15 +35,33 @@ function load_playlist(z) {
         }
 
         $.get(duration_url(ids), {}, function (data2) {
+            var time = FIRST;
             for (var i = 0;i < data2.items.length; i++) {
+                
+                songs[i].begin_at = time;
                 songs[i].duration = parse_iso8601(data2.items[i].contentDetails.duration);
+                time += songs[i].duration;
             }
-            playlist_now(z);
+            z();
         }, 'json');
 
     }, 'json');
 
 }
+
+function when(i) {
+    var date = new Date(songs[i].begin_at * 1000);
+    // hours part from the timestamp
+    var hours = date.getHours();
+    // minutes part from the timestamp
+    var minutes = "0" + date.getMinutes();
+    // seconds part from the timestamp
+    var seconds = "0" + date.getSeconds();
+
+    // will display time in 10:30:23 format
+    return hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+}
+
 
 function parse_iso8601(time) {
     var min = '';
@@ -56,24 +80,21 @@ function parse_iso8601(time) {
     //just fuck it
 }
 
-FIRST = new Date(2015, 5, 11, 15, 45, 0).getTime() / 1000;
-timezone_diff = new Date().getTimezoneOffset() + 120;
-FIRST -= 60 * timezone_diff;
-
 function onYouTubeIframeAPIReady() {
-    load_playlist(function(start_time) {
+    load_playlist(function() { playlist_now(function(start_time) {
         console.log('songs:', songs, start_time);
 
+        setTimeout(reload_playlist, 1000 * (songs[i].begin_at + songs[i].duration - start_time - 12));
         transmitter = new YT.Player('transmitter', {
         height: '360',
         width: '640',
-        videoId: songs[0].id,
+        videoId: songs[i].id,
         playerVars: { 'controls': 1, 'start': start_time },
         events: {
           'onReady': onPlayerReady,
           'onStateChange': onPlayerStateChange
         }
-      })});
+      })})});
 }
 
 
@@ -94,6 +115,7 @@ function onPlayerStateChange(event) {
         if(i == songs.length) {
             i = 1;
         }
+        setTimeout(reload_playlist, 1000 * (songs[i].begin_at + songs[i].duration - 12));
         transmitter.loadVideoById(songs[i].id);
     }
 }
@@ -108,21 +130,31 @@ function moveVideo() {
 
 function playlist_now(z) {
     var now = new Date().getTime() / 1000;
-    console.log(now, FIRST)
-    if (FIRST > now) { setTimeout(function() { playlist_now(z); }, FIRST - now);}
-    var time = FIRST;
-
-    for (var i = 0;i < songs.length; i++) {
-        time += songs[i].duration;
-        console.log(time, now, songs[i].duration - (time - now));
-
-        if (time > now) {
-            songs = songs.slice(i);
-            var start_time = Math.floor(songs[0].duration - (time - now));
+    console.log(now, FIRST, FIRST - now);
+    if (FIRST > now) { setTimeout(function() { playlist_now(z); }, FIRST - now); }
+    for(var z2 = 0; z2 < songs.length; z2++) {
+        console.log(z2, when(z2), songs[z2].begin_at + songs[z2].duration, now);
+        if(songs[z2].begin_at <= now && songs[z2].begin_at + songs[z2].duration > now) {
+            var start_time = Math.floor(now - songs[z2].begin_at);
+            i = z2;
             z(start_time);
-            return;
-        }
+        } 
     }
 }
+
+function reload_playlist() {
+    load_playlist(function() {
+        var next = songs[i].begin_at + songs[i].duration;
+        for(var j = 0;j < songs.length; j++) {
+            if(songs[j].begin_at <= next  && songs[j].begin_at + songs[j].duration > next) {
+                songs[j].begin_at = next;
+                i = j;
+                for(var l = j + 1;l < songs.length; l++) { songs[l].begin_at += next - songs[j].begin_at }
+            }
+        }
+    });
+}
+
+
 
 moveVideo();

@@ -1,4 +1,4 @@
-# euphobia
+# panelka
 
 An online youtube radio
 
@@ -12,5 +12,9 @@ Usage:
 
 ```bash
 
-python euphoria.py
+python panelka.py
+```
+
+```
+music breathes
 ```
