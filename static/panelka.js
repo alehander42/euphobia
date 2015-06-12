@@ -28,20 +28,20 @@ function load_playlist(z) {
     $.get(API_ROOT + API_KEY, {}, function (data) {
         var ids = [];
         songs = [];
-        for (var i = 0; i < data.items.length; i++) {
+        for (var i2 = 0; i2 < data.items.length; i2++) {
             console.log(data.items.length);
-            songs.push({id: data.items[i].snippet.resourceId.videoId,
-                        title: data.items[i].snippet.title});
-            ids.push(data.items[i].snippet.resourceId.videoId);
+            songs.push({id: data.items[i2].snippet.resourceId.videoId,
+                        title: data.items[i2].snippet.title});
+            ids.push(data.items[i2].snippet.resourceId.videoId);
         }
 
         $.get(duration_url(ids), {}, function (data2) {
             var time = FIRST;
-            for (var i = 0;i < data2.items.length; i++) {
+            for (var i2 = 0;i2 < data2.items.length; i2++) {
                 
-                songs[i].begin_at = time;
-                songs[i].duration = parse_iso8601(data2.items[i].contentDetails.duration);
-                time += songs[i].duration;
+                songs[i2].begin_at = time;
+                songs[i2].duration = parse_iso8601(data2.items[i2].contentDetails.duration);
+                time += songs[i2].duration;
             }
             z();
         }, 'json');
@@ -67,15 +67,15 @@ function when(i) {
 function parse_iso8601(time) {
     var min = '';
     var sec = '';
-    var i = 2;
-    while(!isNaN(time[i])) {
-        min += time[i];
-        i++;
+    var i2 = 2;
+    while(!isNaN(time[i2])) {
+        min += time[i2];
+        i2++;
     }
-    i++;
-    while(!isNaN(time[i])) {
-        sec += time[i];
-        i++;
+    i2++;
+    while(!isNaN(time[i2])) {
+        sec += time[i2];
+        i2++;
     }
     if(sec == '') { sec = '0' }
     return 60 * parseInt(min) + parseInt(sec);
@@ -87,13 +87,12 @@ function onYouTubeIframeAPIReady() {
         console.log('songs:', songs, start_time);
 
 
-        setTimeout(reload_playlist, 1000 * (songs[i].begin_at + songs[i].duration - start_time - 22));
         setTimeout(reload_playlist, 1000 * (songs[i].begin_at + songs[i].duration - start_time - 12));
         transmitter = new YT.Player('transmitter', {
         height: '360',
         width: '640',
         videoId: songs[i].id,
-        playerVars: { 'controls': 1, 'start': start_time },
+        playerVars: { 'controls': 0, 'start': start_time },
         events: {
           'onReady': onPlayerReady,
           'onStateChange': onPlayerStateChange
@@ -119,7 +118,6 @@ function onPlayerStateChange(event) {
         if(i == songs.length) {
             i = 1;
         }
-        setTimeout(reload_playlist, 1000 * (songs[i].begin_at + songs[i].duration - 22));
         setTimeout(reload_playlist, 1000 * (songs[i].begin_at + songs[i].duration - 12));
         transmitter.loadVideoById(songs[i].id);
     }
@@ -161,5 +159,5 @@ function reload_playlist() {
 }
 
 
-
+setTimeout(reload_playlist, 20000);
 moveVideo();
